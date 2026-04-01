@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дорама Хаб • Оригинал + Русские субтитры</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+KR:wght@400;500&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .korean { font-family: 'Noto Sans KR', sans-serif; }
+    .card-hover:hover { transform: scale(1.05); transition: all 0.3s; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white">
+
+  <!-- Navbar -->
+  <nav class="bg-zinc-900 border-b border-zinc-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-heart text-rose-500 text-3xl"></i>
+        <span class="text-2xl font-semibold tracking-tight">Дорама Хаб</span>
+      </div>
+      <div class="flex gap-8 text-sm font-medium">
+        <a onclick="navigate('home')" class="cursor-pointer hover:text-rose-400">Главная</a>
+        <a onclick="navigate('dramas')" class="cursor-pointer hover:text-rose-400">Дорамы</a>
+        <a onclick="navigate('dictionary')" class="cursor-pointer hover:text-rose-400">Словарь</a>
+      </div>
+      <div>
+        <button onclick="showAuthModal()" class="bg-white text-zinc-950 px-5 py-2 rounded-full font-medium flex items-center gap-2 hover:bg-rose-500 hover:text-white transition">
+          <i class="fa-solid fa-user"></i>
+          Войти / Регистрация
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Главная -->
+  <div id="home" class="section max-w-7xl mx-auto px-6 py-16">
+    <div class="text-center">
+      <h1 class="text-5xl font-bold mb-4">Смотри дорамы с душой</h1>
+      <p class="text-xl text-zinc-400 mb-8">Оригинальная корейская озвучка + русские субтитры</p>
+      <div class="flex justify-center gap-4">
+        <button onclick="navigate('dramas')" class="bg-rose-500 hover:bg-rose-600 px-8 py-4 rounded-2xl text-lg font-medium">Смотреть дорамы</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Дорамы -->
+  <div id="dramas" class="section hidden max-w-7xl mx-auto px-6 py-12">
+    <h2 class="text-4xl font-semibold mb-8">Наши дорамы</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="dramas-grid"></div>
+  </div>
+
+  <!-- Словарь -->
+  <div id="dictionary" class="section hidden max-w-7xl mx-auto px-6 py-12">
+    <h2 class="text-4xl font-semibold mb-4">Словарь корейских фраз из дорам</h2>
+    <p class="text-zinc-400 mb-8">Базовые фразы с транскрипцией и переводом</p>
+    <input id="searchInput" type="text" placeholder="Поиск фразы..." 
+           class="w-full max-w-md bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3 mb-8 focus:outline-none focus:border-rose-500">
+    <div id="phrases-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </div>
+
+  <!-- Модальное окно просмотра дорамы -->
+  <div id="watchModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[999]">
+    <div class="bg-zinc-900 rounded-3xl max-w-4xl w-full mx-4 overflow-hidden">
+      <div class="p-4 flex justify-between items-center border-b border-zinc-700">
+        <div id="modalTitle" class="text-2xl font-semibold"></div>
+        <button onclick="closeModal()" class="text-3xl text-zinc-400 hover:text-white">×</button>
+      </div>
+      <div class="p-6">
+        <video id="player" controls class="w-full rounded-2xl bg-black" style="max-height: 70vh;">
+          <source id="videoSource" src="" type="video/mp4">
+          <track id="subTrack" kind="subtitles" srclang="ru" label="Русские субтитры" default>
+        </video>
+        <p class="text-xs text-zinc-400 mt-3 text-center">
+          Замени src на прямую ссылку на твой mp4-файл (оригинальная озвучка).<br>
+          Для субтитров создай файл .vtt и укажи ссылку в track.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно регистрации/входа -->
+  <div id="authModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[1000]">
+    <div class="bg-zinc-900 rounded-3xl p-8 max-w-md w-full mx-4">
+      <h3 id="authTitle" class="text-2xl font-semibold mb-6 text-center">Регистрация</h3>
+      <input id="email" type="email" placeholder="Email" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-5 py-4 mb-4 focus:outline-none">
+      <input id="password" type="password" placeholder="Пароль" class="w-full bg-zinc-800 border border-zinc-700 rounded-2xl px-5 py-4 mb-6 focus:outline-none">
+      <button onclick="handleAuth()" class="w-full bg-rose-500 hover:bg-rose-600 py-4 rounded-2xl font-medium">Зарегистрироваться / Войти</button>
+      <p onclick="toggleAuthMode()" id="switchText" class="text-center text-sm text-zinc-400 mt-4 cursor-pointer">Уже есть аккаунт? Войти</p>
+      <button onclick="closeAuthModal()" class="mt-6 text-zinc-400 text-sm w-full">Закрыть</button>
+    </div>
+  </div>
+
+  <script>
+    // Tailwind config
+    function initTailwind() {
+      tailwind.config = {
+        content: [],
+        theme: { extend: {} }
+      };
+    }
+
+    // Данные дорам
+    const dramasData = [
+      {
+        id: 1,
+        title: "Алые сердца: Корё",
+        poster: "https://picsum.photos/id/1015/300/450",
+        year: "2016",
+        desc: "Временной портал, любовь и интриги династии Корё"
+      },
+      {
+        id: 2,
+        title: "Алхимия душ",
+        poster: "https://picsum.photos/id/201/300/450",
+        year: "2022",
+        desc: "Магия, смена тел и запретная любовь"
+      },
+      {
+        id: 3,
+        title: "Месть от третьего лица",
+        poster: "https://picsum.photos/id/301/300/450",
+        year: "2022",
+        desc: "Школьный триллер о мести и тайнах"
+      },
+      {
+        id: 4,
+        title: "Приятного аппетита, ваше величество",
+        poster: "https://picsum.photos/id/401/300/450",
+        year: "2025",
+        desc: "Шеф-повар из будущего и тиран-король"
+      }
+    ];
+
+    // Словарь фраз (можно дополнять)
+    let phrasesData = [
+      { kor: "안녕하세요", trans: "Annyeonghaseyo", ru: "Здравствуйте" },
+      { kor: "감사합니다", trans: "Gamsahamnida", ru: "Спасибо" },
+      { kor: "사랑해요", trans: "Saranghaeyo", ru: "Я тебя люблю" },
+      { kor: "미안해요", trans: "Mianhaeyo", ru: "Извини" },
+      { kor: "어떻게 지내?", trans: "Eotteoke jinae?", ru: "Как дела?" },
+      { kor: "만나서 반가워요", trans: "Mannaseo bangawoyo", ru: "Рада встрече" },
+      { kor: "잘 먹겠습니다", trans: "Jal meokgetseumnida", ru: "Приятного аппетита (перед едой)" },
+      { kor: "조심해", trans: "Josimhae", ru: "Будь осторожен" },
+      { kor: "기다려", trans: "Gidaryeo", ru: "Подожди" },
+      { kor: "사랑해", trans: "Saranghae", ru: "Люблю тебя (неформально)" }
+    ];
+
+    function renderDramas() {
+      const grid = document.getElementById('dramas-grid');
+      grid.innerHTML = dramasData.map(d => `
+        <div class="bg-zinc-900 rounded-3xl overflow-hidden card-hover">
+          <img src="${d.poster}" alt="${d.title}" class="w-full h-96 object-cover">
+          <div class="p-6">
+            <h3 class="text-xl font-semibold">${d.title}</h3>
+            <p class="text-zinc-400 text-sm">${d.year}</p>
+            <p class="text-zinc-300 mt-2 text-sm">${d.desc}</p>
+            <button onclick="openWatchModal(${d.id})" 
+                    class="mt-4 w-full bg-rose-500 hover:bg-rose-600 py-3 rounded-2xl font-medium flex items-center justify-center gap-2">
+              <i class="fa-solid fa-play"></i>
+              Смотреть (оригинал + рус. субтитры)
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPhrases(filtered = phrasesData) {
+      const grid = document.getElementById('phrases-grid');
+      grid.innerHTML = filtered.map(p => `
+        <div class="bg-zinc-900 p-6 rounded-3xl border border-zinc-800">
+          <p class="korean text-3xl mb-1">${p.kor}</p>
+          <p class="text-emerald-400 font-medium">${p.trans}</p>
+          <p class="text-zinc-300 mt-3">${p.ru}</p>
+        </div>
+      `).join('');
+    }
+
+    function openWatchModal(id) {
+      const drama = dramasData.find(d => d.id === id);
+      document.getElementById('modalTitle').textContent = drama.title;
+      // Здесь ты заменяешь ссылки на свои реальные файлы
+      document.getElementById('videoSource').src = ""; // ← ВСТАВЬ СВОЮ ССЫЛКУ НА MP4
+      document.getElementById('subTrack').src = "";     // ← ВСТАВЬ ССЫЛКУ НА .vtt файл
+      document.getElementById('watchModal').classList.remove('hidden');
+      document.getElementById('watchModal').classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('watchModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      const video = document.getElementById('player');
+      video.pause();
+    }
+
+    function showAuthModal() {
+      document.getElementById('authModal').classList.remove('hidden');
+      document.getElementById('authModal').classList.add('flex');
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    let isLogin = false;
+    function toggleAuthMode() {
+      isLogin = !isLogin;
+      document.getElementById('authTitle').textContent = isLogin ? "Вход" : "Регистрация";
+      document.getElementById('switchText').textContent = isLogin ? "Нет аккаунта? Зарегистрироваться" : "Уже есть аккаунт? Войти";
+    }
+
+    function handleAuth() {
+      const email = document.getElementById('email').value;
+      if (email) {
+        localStorage.setItem('user', JSON.stringify({email}));
+        alert(isLogin ? "Вход выполнен!" : "Регистрация прошла успешно! Добро пожаловать ❤️");
+        closeAuthModal();
+      }
+    }
+
+    function navigate(page) {
+      document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(page).classList.remove('hidden');
+    }
+
+    // Поиск в словаре
+    document.addEventListener('DOMContentLoaded', () => {
+      initTailwind();
+      renderDramas();
+      renderPhrases();
+
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', () => {
+        const term = searchInput.value.toLowerCase();
+        const filtered = phrasesData.filter(p => 
+          p.kor.toLowerCase().includes(term) ||
+          p.trans.toLowerCase().includes(term) ||
+          p.ru.toLowerCase().includes(term)
+        );
+        renderPhrases(filtered);
+      });
+
+      // По умолчанию показываем главную
+      navigate('home');
+    });
+  </script>
+</body>
+</html>
